@@ -1,0 +1,11 @@
+[package]
+name = "tauri-wasm"
+version = "0.1.0"
+edition = "2024"
+description = "Tauri API in WASM"
+documentation = "https://docs.rs/tauri-wasm"
+readme = "README.md"
+license = "MIT"
+authors = ["nanoqsh"]
+repository = "https://github.com/nanoqsh/tauri-wasm"
+rust-version = "1.85"
