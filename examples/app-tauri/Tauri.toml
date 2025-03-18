@@ -1,0 +1,14 @@
+product-name = "app"
+identifier = "app"
+version = "0.0.0"
+
+[build]
+before-dev-command = "cargo x"
+frontend-dist = "dist"
+
+[app]
+with-global-tauri = true
+
+[[app.windows]]
+width = 800
+height = 600

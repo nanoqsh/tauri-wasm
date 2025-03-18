@@ -1,0 +1,16 @@
+[package]
+name = "app-tauri"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+
+[lib]
+name = "libapp"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+tauri = { workspace = true, features = ["config-toml"] }
+serde_json.workspace = true
+
+[build-dependencies]
+tauri-build.workspace = true
