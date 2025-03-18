@@ -1,7 +1,16 @@
-use wasm_bindgen::prelude::*;
+mod core;
+mod ext;
+#[cfg(feature = "serde")]
+mod serde;
 
-#[wasm_bindgen(module = "/core.js")]
-extern "C" {
-    /// Checks whether Tauri environment is detected.
-    pub fn is_tauri() -> bool;
+pub mod invoke {
+    pub use crate::core::{IntoStringValue, InvokeArgs, InvokeOptions, Untype};
 }
+
+pub use crate::{
+    core::{Error, invoke, invoke_with_args, invoke_with_options},
+    ext::is_tauri,
+};
+
+#[cfg(feature = "serde")]
+pub use crate::serde::Data;
