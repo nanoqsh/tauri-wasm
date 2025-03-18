@@ -3,12 +3,12 @@ name = "tauri-wasm"
 description = "Tauri API in WASM"
 documentation = "https://docs.rs/tauri-wasm"
 readme = "README.md"
-license = "MIT"
-authors = ["nanoqsh"]
-repository = "https://github.com/nanoqsh/tauri-wasm"
 version.workspace = true
 edition.workspace = true
+authors.workspace = true
+license.workspace = true
 rust-version.workspace = true
+repository.workspace = true
 
 [features]
 serde = ["dep:serde", "serde-wasm-bindgen"]
