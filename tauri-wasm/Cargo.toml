@@ -2,7 +2,7 @@
 name = "tauri-wasm"
 description = "Tauri API in WASM"
 documentation = "https://docs.rs/tauri-wasm"
-readme = "README.md"
+readme = "../README.md"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
