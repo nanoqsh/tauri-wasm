@@ -18,7 +18,7 @@ where
     }
 }
 
-impl<'rf, T> ToArgs for &'rf Data<T>
+impl<T> ToArgs for &Data<T>
 where
     T: Serialize + ?Sized,
 {

@@ -11,3 +11,6 @@ crate-type = ["cdylib"]
 gloo = { workspace = true, features = ["console"] }
 tauri-wasm = { workspace = true, features = ["serde"] }
 wasm-bindgen.workspace = true
+
+[lints]
+workspace = true
