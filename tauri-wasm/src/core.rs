@@ -18,6 +18,7 @@ use {
 /// }
 /// # }
 /// ```
+#[inline]
 pub async fn invoke<C>(cmd: C) -> Result<JsValue, Error>
 where
     C: ToStringValue,
@@ -55,6 +56,7 @@ where
 /// }
 /// # }
 /// ```
+#[inline]
 pub async fn invoke_with_args<C, A>(cmd: C, args: A) -> Result<JsValue, Error>
 where
     C: ToStringValue,
@@ -91,6 +93,7 @@ where
 /// }
 /// # }
 /// ```
+#[inline]
 pub async fn invoke_with_options<C, A, O>(cmd: C, args: A, opts: O) -> Result<JsValue, Error>
 where
     C: ToStringValue,
@@ -112,6 +115,8 @@ pub trait ToStringValue {
 
 impl ToStringValue for JsString {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
@@ -119,6 +124,8 @@ impl ToStringValue for JsString {
 
 impl<'rf> ToStringValue for &'rf JsString {
     type JsValue = &'rf JsValue;
+
+    #[inline]
     fn to_string_value(self) -> Self::JsValue {
         self
     }
@@ -126,6 +133,8 @@ impl<'rf> ToStringValue for &'rf JsString {
 
 impl ToStringValue for String {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_string_value(self) -> Self::JsValue {
         (&self).to_string_value()
     }
@@ -133,6 +142,8 @@ impl ToStringValue for String {
 
 impl ToStringValue for &String {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
@@ -140,6 +151,8 @@ impl ToStringValue for &String {
 
 impl ToStringValue for &str {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
@@ -152,6 +165,8 @@ pub trait ToArgs {
 
 impl ToArgs for ArrayBuffer {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(JsValue::from(self))
     }
@@ -159,6 +174,8 @@ impl ToArgs for ArrayBuffer {
 
 impl<'rf> ToArgs for &'rf ArrayBuffer {
     type JsValue = &'rf JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(self)
     }
@@ -166,6 +183,8 @@ impl<'rf> ToArgs for &'rf ArrayBuffer {
 
 impl ToArgs for Uint8Array {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(JsValue::from(self))
     }
@@ -173,6 +192,8 @@ impl ToArgs for Uint8Array {
 
 impl<'rf> ToArgs for &'rf Uint8Array {
     type JsValue = &'rf JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(self)
     }
@@ -180,6 +201,8 @@ impl<'rf> ToArgs for &'rf Uint8Array {
 
 impl ToArgs for &[u8] {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Uint8Array::from(self).to_args()
     }
@@ -187,6 +210,8 @@ impl ToArgs for &[u8] {
 
 impl<const N: usize> ToArgs for &[u8; N] {
     type JsValue = JsValue;
+
+    #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
         self.as_slice().to_args()
     }
@@ -204,6 +229,7 @@ pub enum Error {
 }
 
 impl fmt::Display for Error {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         ext::to_string(self.as_ref()).fmt(f)
     }
@@ -212,6 +238,7 @@ impl fmt::Display for Error {
 impl error::Error for Error {}
 
 impl From<Error> for JsValue {
+    #[inline]
     fn from(e: Error) -> Self {
         let (Error::Invoke(js) | Error::Args(js) | Error::Options(js)) = e;
         js
@@ -219,6 +246,7 @@ impl From<Error> for JsValue {
 }
 
 impl AsRef<JsValue> for Error {
+    #[inline]
     fn as_ref(&self) -> &JsValue {
         let (Self::Invoke(js) | Self::Args(js) | Self::Options(js)) = self;
         js

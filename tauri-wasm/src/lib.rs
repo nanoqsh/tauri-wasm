@@ -1,3 +1,5 @@
+#![warn(clippy::missing_inline_in_public_items)]
+
 mod core;
 mod ext;
 #[cfg(feature = "serde")]
