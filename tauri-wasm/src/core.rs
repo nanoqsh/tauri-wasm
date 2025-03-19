@@ -20,12 +20,14 @@ use {
 /// ```
 pub async fn invoke<C>(cmd: C) -> Result<JsValue, Error>
 where
-    C: IntoStringValue,
+    C: ToStringValue,
 {
-    let cmd = cmd.into_string_value();
+    let cmd = cmd.to_string_value();
     let args = JsValue::NULL;
     let opts = JsValue::NULL;
-    ext::invoke(cmd, args, opts).await.map_err(Error::Invoke)
+    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+        .await
+        .map_err(Error::Invoke)
 }
 
 /// Sends a message with arguments to the backend.
@@ -38,9 +40,9 @@ where
 /// use {gloo::console, serde::Serialize, tauri_wasm::Data};
 ///
 /// #[derive(Serialize)]
-/// struct User<'s> {
-///     name: &'s str,
-///     pass: &'s str,
+/// struct User<'str> {
+///     name: &'str str,
+///     pass: &'str str,
 /// }
 ///
 /// let user = User {
@@ -55,13 +57,15 @@ where
 /// ```
 pub async fn invoke_with_args<C, A>(cmd: C, args: A) -> Result<JsValue, Error>
 where
-    C: IntoStringValue,
-    A: InvokeArgs,
+    C: ToStringValue,
+    A: ToArgs,
 {
-    let cmd = cmd.into_string_value();
-    let args = args.invoke_args().map_err(Error::Args)?;
+    let cmd = cmd.to_string_value();
+    let args = args.to_args().map_err(Error::Args)?;
     let opts = JsValue::NULL;
-    ext::invoke(cmd, args, opts).await.map_err(Error::Invoke)
+    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+        .await
+        .map_err(Error::Invoke)
 }
 
 /// Sends a message with arguments and options to the backend.
@@ -89,92 +93,107 @@ where
 /// ```
 pub async fn invoke_with_options<C, A, O>(cmd: C, args: A, opts: O) -> Result<JsValue, Error>
 where
-    C: IntoStringValue,
-    A: InvokeArgs,
-    O: InvokeOptions,
+    C: ToStringValue,
+    A: ToArgs,
+    O: ToOptions,
 {
-    let cmd = cmd.into_string_value();
-    let args = args.invoke_args().map_err(Error::Args)?;
-    let opts = opts.invoke_options().map_err(Error::Options)?;
-    ext::invoke(cmd, args, opts).await.map_err(Error::Invoke)
+    let cmd = cmd.to_string_value();
+    let args = args.to_args().map_err(Error::Args)?;
+    let opts = opts.to_options().map_err(Error::Options)?;
+    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+        .await
+        .map_err(Error::Invoke)
 }
 
-pub trait IntoStringValue {
-    fn into_string_value(self) -> JsValue;
+pub trait ToStringValue {
+    type JsValue: AsRef<JsValue>;
+    fn to_string_value(self) -> Self::JsValue;
 }
 
-impl IntoStringValue for JsString {
-    fn into_string_value(self) -> JsValue {
-        (&self).into_string_value()
-    }
-}
-
-impl IntoStringValue for &JsString {
-    fn into_string_value(self) -> JsValue {
+impl ToStringValue for JsString {
+    type JsValue = JsValue;
+    fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
 }
 
-impl IntoStringValue for String {
-    fn into_string_value(self) -> JsValue {
-        (&self).into_string_value()
+impl<'rf> ToStringValue for &'rf JsString {
+    type JsValue = &'rf JsValue;
+    fn to_string_value(self) -> Self::JsValue {
+        self
     }
 }
 
-impl IntoStringValue for &String {
-    fn into_string_value(self) -> JsValue {
+impl ToStringValue for String {
+    type JsValue = JsValue;
+    fn to_string_value(self) -> Self::JsValue {
+        (&self).to_string_value()
+    }
+}
+
+impl ToStringValue for &String {
+    type JsValue = JsValue;
+    fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
 }
 
-impl IntoStringValue for &str {
-    fn into_string_value(self) -> JsValue {
+impl ToStringValue for &str {
+    type JsValue = JsValue;
+    fn to_string_value(self) -> Self::JsValue {
         JsValue::from(self)
     }
 }
 
-pub trait InvokeArgs {
-    fn invoke_args(self) -> Result<JsValue, JsValue>;
+pub trait ToArgs {
+    type JsValue: AsRef<JsValue>;
+    fn to_args(self) -> Result<Self::JsValue, JsValue>;
 }
 
-impl InvokeArgs for ArrayBuffer {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        (&self).invoke_args()
-    }
-}
-
-impl InvokeArgs for &ArrayBuffer {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
+impl ToArgs for ArrayBuffer {
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(JsValue::from(self))
     }
 }
 
-impl InvokeArgs for Uint8Array {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        (&self).invoke_args()
+impl<'rf> ToArgs for &'rf ArrayBuffer {
+    type JsValue = &'rf JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
+        Ok(self)
     }
 }
 
-impl InvokeArgs for &Uint8Array {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
+impl ToArgs for Uint8Array {
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
         Ok(JsValue::from(self))
     }
 }
 
-impl InvokeArgs for &[u8] {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        Uint8Array::from(self).invoke_args()
+impl<'rf> ToArgs for &'rf Uint8Array {
+    type JsValue = &'rf JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
+        Ok(self)
     }
 }
 
-impl<const N: usize> InvokeArgs for &[u8; N] {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        self.as_slice().invoke_args()
+impl ToArgs for &[u8] {
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
+        Uint8Array::from(self).to_args()
     }
 }
 
-pub trait InvokeOptions {
-    fn invoke_options(self) -> Result<JsValue, JsValue>;
+impl<const N: usize> ToArgs for &[u8; N] {
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
+        self.as_slice().to_args()
+    }
+}
+
+pub trait ToOptions {
+    fn to_options(self) -> Result<JsValue, JsValue>;
 }
 
 #[derive(Debug)]

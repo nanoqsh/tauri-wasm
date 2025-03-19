@@ -10,9 +10,9 @@ extern "C" {
 extern "C" {
     #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"], catch)]
     pub(crate) async fn invoke(
-        cmd: JsValue,
-        args: JsValue,
-        opts: JsValue,
+        cmd: &JsValue,
+        args: &JsValue,
+        opts: &JsValue,
     ) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_name = String)]

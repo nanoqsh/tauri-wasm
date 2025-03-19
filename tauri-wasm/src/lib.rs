@@ -4,11 +4,11 @@ mod ext;
 mod serde;
 
 pub mod invoke {
-    pub use crate::core::{IntoStringValue, InvokeArgs, InvokeOptions};
+    pub use crate::core::{Error, ToArgs, ToOptions, ToStringValue};
 }
 
 pub use crate::{
-    core::{Error, invoke, invoke_with_args, invoke_with_options},
+    core::{invoke, invoke_with_args, invoke_with_options},
     ext::is_tauri,
 };
 

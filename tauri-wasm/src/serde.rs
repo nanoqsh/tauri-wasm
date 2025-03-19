@@ -1,5 +1,5 @@
 use {
-    crate::core::{InvokeArgs, InvokeOptions},
+    crate::core::{ToArgs, ToOptions},
     serde::Serialize,
     wasm_bindgen::JsValue,
 };
@@ -8,38 +8,40 @@ pub struct Data<T>(pub T)
 where
     T: ?Sized;
 
-impl<T> InvokeArgs for Data<T>
+impl<T> ToArgs for Data<T>
 where
     T: Serialize,
 {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        (&self).invoke_args()
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
+        (&self).to_args()
     }
 }
 
-impl<T> InvokeArgs for &Data<T>
+impl<'rf, T> ToArgs for &'rf Data<T>
 where
     T: Serialize + ?Sized,
 {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
+    type JsValue = JsValue;
+    fn to_args(self) -> Result<Self::JsValue, JsValue> {
         serde_wasm_bindgen::to_value(&self.0).map_err(JsValue::from)
     }
 }
 
-impl<T> InvokeOptions for Data<T>
+impl<T> ToOptions for Data<T>
 where
     T: Serialize,
 {
-    fn invoke_options(self) -> Result<JsValue, JsValue> {
-        (&self).invoke_options()
+    fn to_options(self) -> Result<JsValue, JsValue> {
+        (&self).to_options()
     }
 }
 
-impl<T> InvokeOptions for &Data<T>
+impl<T> ToOptions for &Data<T>
 where
     T: Serialize + ?Sized,
 {
-    fn invoke_options(self) -> Result<JsValue, JsValue> {
+    fn to_options(self) -> Result<JsValue, JsValue> {
         serde_wasm_bindgen::to_value(&self.0).map_err(JsValue::from)
     }
 }
