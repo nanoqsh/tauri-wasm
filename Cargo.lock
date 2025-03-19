@@ -67,8 +67,10 @@ name = "app"
 version = "0.0.0"
 dependencies = [
  "gloo",
+ "serde",
  "tauri-wasm",
  "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]

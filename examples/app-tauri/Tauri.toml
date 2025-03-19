@@ -10,5 +10,6 @@ frontend-dist = "dist"
 with-global-tauri = true
 
 [[app.windows]]
+label = "app"
 width = 800
 height = 600

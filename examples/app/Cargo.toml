@@ -9,8 +9,10 @@ crate-type = ["cdylib"]
 
 [dependencies]
 gloo = { workspace = true, features = ["console"] }
+serde.workspace = true
 tauri-wasm = { workspace = true, features = ["serde"] }
 wasm-bindgen.workspace = true
+wasm-bindgen-futures.workspace = true
 
 [lints]
 workspace = true
