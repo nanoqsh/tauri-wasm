@@ -105,7 +105,7 @@ pub trait IntoStringValue {
 
 impl IntoStringValue for JsString {
     fn into_string_value(self) -> JsValue {
-        JsValue::from(self)
+        (&self).into_string_value()
     }
 }
 
@@ -117,7 +117,7 @@ impl IntoStringValue for &JsString {
 
 impl IntoStringValue for String {
     fn into_string_value(self) -> JsValue {
-        JsValue::from(self)
+        (&self).into_string_value()
     }
 }
 
@@ -139,7 +139,7 @@ pub trait InvokeArgs {
 
 impl InvokeArgs for ArrayBuffer {
     fn invoke_args(self) -> Result<JsValue, JsValue> {
-        Ok(JsValue::from(self))
+        (&self).invoke_args()
     }
 }
 
@@ -151,7 +151,7 @@ impl InvokeArgs for &ArrayBuffer {
 
 impl InvokeArgs for Uint8Array {
     fn invoke_args(self) -> Result<JsValue, JsValue> {
-        Ok(JsValue::from(self))
+        (&self).invoke_args()
     }
 }
 
@@ -175,26 +175,6 @@ impl<const N: usize> InvokeArgs for &[u8; N] {
 
 pub trait InvokeOptions {
     fn invoke_options(self) -> Result<JsValue, JsValue>;
-}
-
-pub struct Untype(pub JsValue);
-
-impl IntoStringValue for Untype {
-    fn into_string_value(self) -> JsValue {
-        self.0
-    }
-}
-
-impl InvokeArgs for Untype {
-    fn invoke_args(self) -> Result<JsValue, JsValue> {
-        Ok(self.0)
-    }
-}
-
-impl InvokeOptions for Untype {
-    fn invoke_options(self) -> Result<JsValue, JsValue> {
-        Ok(self.0)
-    }
 }
 
 #[derive(Debug)]

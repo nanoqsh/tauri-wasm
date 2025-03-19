@@ -4,7 +4,7 @@ mod ext;
 mod serde;
 
 pub mod invoke {
-    pub use crate::core::{IntoStringValue, InvokeArgs, InvokeOptions, Untype};
+    pub use crate::core::{IntoStringValue, InvokeArgs, InvokeOptions};
 }
 
 pub use crate::{
