@@ -1,8 +1,22 @@
-use wasm_bindgen::prelude::*;
+use {crate::core::Options, wasm_bindgen::prelude::*};
 
 #[wasm_bindgen(module = "/core.js")]
 extern "C" {
     /// Checks whether Tauri environment is detected.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # fn e() {
+    /// use gloo::console;
+    ///
+    /// if tauri_wasm::is_tauri() {
+    ///     console::log!("tauri was detected!");
+    /// } else {
+    ///     console::error!("tauri was not detected!");
+    /// }
+    /// # }
+    /// ```
     pub fn is_tauri() -> bool;
 }
 
@@ -12,7 +26,7 @@ extern "C" {
     pub(crate) async fn invoke(
         cmd: &JsValue,
         args: &JsValue,
-        opts: &JsValue,
+        opts: Option<Options>,
     ) -> Result<JsValue, JsValue>;
 
     #[wasm_bindgen(js_name = String)]

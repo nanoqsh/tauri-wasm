@@ -1,6 +1,6 @@
-use {gloo::console, wasm_bindgen::prelude::*};
+use {gloo::console, serde::Serialize, wasm_bindgen::prelude::*};
 
-async fn hello() {
+async fn hello() -> Result<(), JsError> {
     use {serde::Serialize, tauri_wasm::Data};
 
     #[derive(Serialize)]
@@ -8,11 +8,34 @@ async fn hello() {
         message: &'static str,
     }
 
-    let s = Send { message: "front!" };
+    let s = Send { message: "ping" };
 
-    match tauri_wasm::invoke_with_args("hello", Data(s)).await {
-        Ok(message) => console::log!("message from frontend received", message),
-        Err(e) => console::error!("failed to receive a message", e),
+    let message = tauri_wasm::invoke_with_args("hello", Data(s)).await?;
+    console::log!("message from backend received", &message);
+
+    if message == "ping" {
+        Ok(())
+    } else {
+        Err(JsError::new("wrong backend message"))
+    }
+}
+
+async fn headers() -> Result<(), JsError> {
+    use tauri_wasm::invoke::Options;
+
+    let opts = Options::from_record([
+        ("app-0", "fi"), //
+        ("app-1", "hi"), //
+        ("app-2", "lo"), //
+    ])?;
+
+    let message = tauri_wasm::invoke_with_options("headers", &[], opts).await?;
+    console::log!("message from backend received", &message);
+
+    if message == "fi.hi.lo" {
+        Ok(())
+    } else {
+        Err(JsError::new("wrong backend message"))
     }
 }
 
@@ -25,11 +48,19 @@ pub async fn close() {
 
 #[wasm_bindgen(start)]
 async fn start() {
-    if tauri_wasm::is_tauri() {
-        console::log!("tauri was detected!");
-    } else {
-        console::warn!("tauri was not detected!");
+    if !tauri_wasm::is_tauri() {
+        console::error!("tauri was not detected!");
+        return;
     }
 
-    hello().await;
+    console::log!("tauri was detected!");
+
+    if let Err(e) = hello().await {
+        console::error!("failed to call hello", e);
+        return;
+    }
+
+    if let Err(e) = headers().await {
+        console::error!("failed to call headers", e);
+    }
 }

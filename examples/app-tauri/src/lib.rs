@@ -1,9 +1,28 @@
-use tauri::Window;
+use tauri::{Window, ipc::Request};
 
 #[tauri::command]
 fn hello(message: String) -> String {
     println!("message from frontend received: {message}");
-    "back!".to_owned()
+    message
+}
+
+#[tauri::command]
+fn headers(req: Request<'_>) -> String {
+    let mut values = vec![];
+    for (key, value) in req.headers() {
+        if !key.as_str().starts_with("app-") {
+            continue;
+        }
+
+        let Ok(value) = value.to_str() else {
+            return "invalid header".to_owned();
+        };
+
+        values.push(value);
+    }
+
+    values.sort();
+    values.join(".")
 }
 
 #[tauri::command]
@@ -26,7 +45,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![hello, close])
+        .invoke_handler(tauri::generate_handler![hello, headers, close])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

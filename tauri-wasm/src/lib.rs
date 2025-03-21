@@ -6,7 +6,7 @@ mod ext;
 mod serde;
 
 pub mod invoke {
-    pub use crate::core::{Error, ToArgs, ToOptions, ToStringValue};
+    pub use crate::core::{Error, Options, ToArgs, ToHeaders, ToStringValue};
 }
 
 pub use crate::{

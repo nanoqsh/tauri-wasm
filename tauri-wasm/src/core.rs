@@ -10,12 +10,12 @@ use {
 /// # Example
 ///
 /// ```
-/// # async fn invoke() {
+/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
 /// use gloo::console;
 ///
-/// if let Ok(message) = tauri_wasm::invoke("connect").await {
-///     console::log!("connected to backend: {message}");
-/// }
+/// let message = tauri_wasm::invoke("connect").await?;
+/// console::log!("connected to backend", message);
+/// # Ok(())
 /// # }
 /// ```
 #[inline]
@@ -25,8 +25,8 @@ where
 {
     let cmd = cmd.to_string_value();
     let args = JsValue::NULL;
-    let opts = JsValue::NULL;
-    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+
+    ext::invoke(cmd.as_ref(), args.as_ref(), None)
         .await
         .map_err(Error::Invoke)
 }
@@ -37,7 +37,7 @@ where
 ///
 #[cfg_attr(feature = "serde", doc = "```")]
 #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn invoke() {
+/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
 /// use {gloo::console, serde::Serialize, tauri_wasm::Data};
 ///
 /// #[derive(Serialize)]
@@ -51,9 +51,9 @@ where
 ///     pass: "p@$$w0rD",
 /// };
 ///
-/// if let Ok(message) = tauri_wasm::invoke_with_args("login", Data(user)).await {
-///     console::log!("logged on backend: {message}");
-/// }
+/// let message = tauri_wasm::invoke_with_args("login", Data(user)).await?;
+/// console::log!("logged on backend", message);
+/// # Ok(())
 /// # }
 /// ```
 #[inline]
@@ -64,8 +64,8 @@ where
 {
     let cmd = cmd.to_string_value();
     let args = args.to_args().map_err(Error::Args)?;
-    let opts = JsValue::NULL;
-    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+
+    ext::invoke(cmd.as_ref(), args.as_ref(), None)
         .await
         .map_err(Error::Invoke)
 }
@@ -76,34 +76,25 @@ where
 ///
 #[cfg_attr(feature = "serde", doc = "```")]
 #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn invoke() {
-/// use {gloo::console, serde::Serialize, tauri_wasm::Data};
+/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
+/// use {gloo::console, tauri_wasm::invoke::Options};
 ///
-/// #[derive(Serialize)]
-/// struct Options {
-///     secret: u32,
-/// }
-///
-/// let opts = Options {
-///     secret: 37,
-/// };
-///
-/// if let Ok(message) = tauri_wasm::invoke_with_options("send", &[], Data(opts)).await {
-///     console::log!("received from backend: {message}");
-/// }
+/// let opts = Options::from_record([("secret", "37")])?;
+/// let message = tauri_wasm::invoke_with_options("send", &[], opts).await?;
+/// console::log!("received from backend", message);
+/// # Ok(())
 /// # }
 /// ```
 #[inline]
-pub async fn invoke_with_options<C, A, O>(cmd: C, args: A, opts: O) -> Result<JsValue, Error>
+pub async fn invoke_with_options<C, A>(cmd: C, args: A, opts: Options) -> Result<JsValue, Error>
 where
     C: ToStringValue,
     A: ToArgs,
-    O: ToOptions,
 {
     let cmd = cmd.to_string_value();
     let args = args.to_args().map_err(Error::Args)?;
-    let opts = opts.to_options().map_err(Error::Options)?;
-    ext::invoke(cmd.as_ref(), args.as_ref(), opts.as_ref())
+
+    ext::invoke(cmd.as_ref(), args.as_ref(), Some(opts))
         .await
         .map_err(Error::Invoke)
 }
@@ -217,15 +208,38 @@ impl<const N: usize> ToArgs for &[u8; N] {
     }
 }
 
-pub trait ToOptions {
-    fn to_options(self) -> Result<JsValue, JsValue>;
+#[wasm_bindgen]
+pub struct Options {
+    pub(crate) headers: JsValue,
+}
+
+#[wasm_bindgen]
+impl Options {
+    #[inline]
+    #[wasm_bindgen(getter)]
+    pub fn headers(self) -> JsValue {
+        self.headers
+    }
+}
+
+pub trait ToHeaders {
+    fn to_headers(self) -> Result<JsValue, JsValue>;
+
+    #[inline]
+    fn to_options(self) -> Result<Options, Error>
+    where
+        Self: Sized,
+    {
+        let headers = self.to_headers().map_err(Error::Headers)?;
+        Ok(Options { headers })
+    }
 }
 
 #[derive(Debug)]
 pub enum Error {
     Invoke(JsValue),
     Args(JsValue),
-    Options(JsValue),
+    Headers(JsValue),
 }
 
 impl fmt::Display for Error {
@@ -240,7 +254,7 @@ impl error::Error for Error {}
 impl From<Error> for JsValue {
     #[inline]
     fn from(e: Error) -> Self {
-        let (Error::Invoke(js) | Error::Args(js) | Error::Options(js)) = e;
+        let (Error::Invoke(js) | Error::Args(js) | Error::Headers(js)) = e;
         js
     }
 }
@@ -248,7 +262,7 @@ impl From<Error> for JsValue {
 impl AsRef<JsValue> for Error {
     #[inline]
     fn as_ref(&self) -> &JsValue {
-        let (Self::Invoke(js) | Self::Args(js) | Self::Options(js)) = self;
+        let (Self::Invoke(js) | Self::Args(js) | Self::Headers(js)) = self;
         js
     }
 }
