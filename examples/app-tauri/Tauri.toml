@@ -9,6 +9,11 @@ frontend-dist = "dist"
 [app]
 with-global-tauri = true
 
+[[app.security.capabilities]]
+identifier = "default"
+windows = ["app"]
+permissions = ["core:event:default"]
+
 [[app.windows]]
 label = "app"
 width = 800

@@ -34,6 +34,8 @@ fn close(window: Window) {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            use tauri::Listener;
+
             #[cfg(debug_assertions)]
             {
                 use tauri::Manager;
@@ -42,6 +44,11 @@ pub fn run() {
                     .expect("the app webview should exist")
                     .open_devtools();
             }
+
+            app.listen("test-event", |event| {
+                let payload = event.payload();
+                println!("test-event: {payload}");
+            });
 
             Ok(())
         })

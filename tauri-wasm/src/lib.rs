@@ -1,6 +1,8 @@
 #![warn(clippy::missing_inline_in_public_items)]
 
 mod core;
+#[cfg(feature = "serde")]
+mod event;
 mod ext;
 #[cfg(feature = "headers")]
 mod headers;
@@ -17,4 +19,4 @@ pub use crate::{
 };
 
 #[cfg(feature = "serde")]
-pub use crate::serde::Data;
+pub use crate::{event::emit, serde::Data};

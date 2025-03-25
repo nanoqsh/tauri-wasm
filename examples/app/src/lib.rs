@@ -39,6 +39,11 @@ async fn headers() -> Result<(), JsError> {
     }
 }
 
+async fn event() -> Result<(), JsError> {
+    tauri_wasm::emit("test-event", "payload").await?;
+    Ok(())
+}
+
 #[wasm_bindgen]
 pub async fn close() {
     if let Err(e) = tauri_wasm::invoke("close").await {
@@ -62,5 +67,10 @@ async fn start() {
 
     if let Err(e) = headers().await {
         console::error!("failed to call headers", e);
+        return;
+    }
+
+    if let Err(e) = event().await {
+        console::error!("failed to call event", e);
     }
 }

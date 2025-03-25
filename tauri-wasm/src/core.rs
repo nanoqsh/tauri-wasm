@@ -100,7 +100,7 @@ where
 }
 
 pub trait ToStringValue {
-    type JsValue: AsRef<JsValue>;
+    type JsValue: AsRef<JsValue> + Into<JsValue>;
     fn to_string_value(self) -> Self::JsValue;
 }
 
