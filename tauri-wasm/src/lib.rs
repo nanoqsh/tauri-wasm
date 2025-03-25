@@ -2,6 +2,8 @@
 
 mod core;
 mod ext;
+#[cfg(feature = "headers")]
+mod headers;
 #[cfg(feature = "serde")]
 mod serde;
 

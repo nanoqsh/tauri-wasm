@@ -21,6 +21,7 @@ tauri = "2"
 tauri-build = "2"
 wasm-bindgen = { version = "0.2.100", default-features = false }
 wasm-bindgen-futures = { version = "0.4.50", default-features = false }
+web-sys = "0.3"
 
 [workspace.lints.rust]
 elided-lifetimes-in-paths = "deny"

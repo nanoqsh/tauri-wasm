@@ -14,6 +14,7 @@ repository.workspace = true
 
 [features]
 serde = ["dep:serde", "serde-wasm-bindgen"]
+headers = ["web-sys/Headers"]
 
 [dependencies]
 js-sys.workspace = true
@@ -21,6 +22,7 @@ serde = { workspace = true, optional = true }
 serde-wasm-bindgen = { workspace = true, optional = true }
 wasm-bindgen.workspace = true
 wasm-bindgen-futures.workspace = true
+web-sys = { workspace = true, optional = true }
 
 [dev-dependencies]
 gloo = { workspace = true, features = ["console"] }
