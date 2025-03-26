@@ -34,18 +34,18 @@ fn close(window: Window) {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            use tauri::Listener;
+            use tauri::{Listener, Manager};
+
+            let webview = app
+                .get_webview_window("app")
+                .expect("the app webview should exist");
 
             #[cfg(debug_assertions)]
             {
-                use tauri::Manager;
-
-                app.get_webview_window("app")
-                    .expect("the app webview should exist")
-                    .open_devtools();
+                webview.open_devtools();
             }
 
-            app.listen("test-event", |event| {
+            webview.listen("test-event", |event| {
                 let payload = event.payload();
                 println!("test-event: {payload}");
             });

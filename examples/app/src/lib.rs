@@ -40,7 +40,10 @@ async fn headers() -> Result<(), JsError> {
 }
 
 async fn event() -> Result<(), JsError> {
-    tauri_wasm::emit("test-event", "payload").await?;
+    use tauri_wasm::EventTarget;
+
+    let target = EventTarget::from_str("app");
+    tauri_wasm::emit_to(target, "test-event", "payload").await?;
     Ok(())
 }
 

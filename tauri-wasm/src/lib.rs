@@ -19,4 +19,7 @@ pub use crate::{
 };
 
 #[cfg(feature = "serde")]
-pub use crate::{event::emit, serde::Data};
+pub use crate::{
+    event::{EventKind, EventTarget, emit, emit_to},
+    serde::Data,
+};

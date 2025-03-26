@@ -100,51 +100,51 @@ where
 }
 
 pub trait ToStringValue {
-    type JsValue: AsRef<JsValue> + Into<JsValue>;
-    fn to_string_value(self) -> Self::JsValue;
+    type Js: AsRef<JsValue>;
+    fn to_string_value(self) -> Self::Js;
 }
 
 impl ToStringValue for JsString {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_string_value(self) -> Self::JsValue {
+    fn to_string_value(self) -> Self::Js {
         JsValue::from(self)
     }
 }
 
 impl<'rf> ToStringValue for &'rf JsString {
-    type JsValue = &'rf JsValue;
+    type Js = &'rf JsValue;
 
     #[inline]
-    fn to_string_value(self) -> Self::JsValue {
+    fn to_string_value(self) -> Self::Js {
         self
     }
 }
 
 impl ToStringValue for String {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_string_value(self) -> Self::JsValue {
+    fn to_string_value(self) -> Self::Js {
         (&self).to_string_value()
     }
 }
 
 impl ToStringValue for &String {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_string_value(self) -> Self::JsValue {
+    fn to_string_value(self) -> Self::Js {
         JsValue::from(self)
     }
 }
 
 impl ToStringValue for &str {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_string_value(self) -> Self::JsValue {
+    fn to_string_value(self) -> Self::Js {
         JsValue::from(self)
     }
 }
