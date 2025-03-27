@@ -6,6 +6,7 @@
     <p>
         <a href="https://crates.io/crates/tauri-wasm"><img src="https://img.shields.io/crates/v/tauri-wasm.svg"></img></a>
         <a href="https://docs.rs/tauri-wasm"><img src="https://docs.rs/tauri-wasm/badge.svg"></img></a>
+        <a href="https://github.com/nanoqsh/tauri-wasm/actions"><img src="https://github.com/nanoqsh/tauri-wasm/workflows/ci/badge.svg"></img></a>
     </p>
 </div>
 
