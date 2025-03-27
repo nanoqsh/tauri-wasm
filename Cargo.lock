@@ -3547,7 +3547,7 @@ dependencies = [
 
 [[package]]
 name = "tauri-wasm"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "gloo",
  "js-sys",

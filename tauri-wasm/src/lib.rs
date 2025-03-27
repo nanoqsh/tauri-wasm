@@ -1,4 +1,4 @@
-#![doc = include_str!("../../README.md")]
+#![doc = include_str!("../README.md")]
 #![warn(clippy::missing_inline_in_public_items)]
 
 mod core;
