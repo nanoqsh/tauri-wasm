@@ -18,8 +18,8 @@ jobs:
         steps:
           - uses: actions/checkout@v4
           - name: Build
-            run: cargo build --verbose
+            run: cargo build --verbose -p tauri-wasm --all-features
           - name: Clippy
-            run: cargo clippy
+            run: cargo clippy -p tauri-wasm --all-features
           - name: Tests
-            run: cargo test --verbose
+            run: cargo test --verbose -p tauri-wasm --all-features
