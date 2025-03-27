@@ -5,6 +5,7 @@ use {
     wasm_bindgen::JsValue,
 };
 
+/// Arbitrary serializable data for [`invoke`](crate::invoke()) function family.
 pub struct Data<T>(pub T)
 where
     T: ?Sized;

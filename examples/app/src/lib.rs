@@ -21,7 +21,7 @@ async fn hello() -> Result<(), JsError> {
 }
 
 async fn headers() -> Result<(), JsError> {
-    use tauri_wasm::invoke::Options;
+    use tauri_wasm::Options;
 
     let opts = Options::from_record([
         ("app-0", "fi"), //
@@ -42,7 +42,7 @@ async fn headers() -> Result<(), JsError> {
 async fn event() -> Result<(), JsError> {
     use tauri_wasm::EventTarget;
 
-    let target = EventTarget::from_str("app");
+    let target = EventTarget::from("app");
     tauri_wasm::emit_to(target, "test-event", "payload").await?;
     Ok(())
 }

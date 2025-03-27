@@ -18,6 +18,8 @@ extern "C" {
     /// # }
     /// ```
     pub fn is_tauri() -> bool;
+
+    pub(crate) fn eargs(event: &JsValue, payload: &JsValue, k: u32, l: &JsValue) -> JsValue;
 }
 
 #[wasm_bindgen]

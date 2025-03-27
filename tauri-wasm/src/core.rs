@@ -10,7 +10,7 @@ use {
 /// # Example
 ///
 /// ```
-/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
+/// # async fn e() -> Result<(), tauri_wasm::Error> {
 /// use gloo::console;
 ///
 /// let message = tauri_wasm::invoke("connect").await?;
@@ -37,7 +37,7 @@ where
 ///
 #[cfg_attr(feature = "serde", doc = "```")]
 #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
+/// # async fn e() -> Result<(), tauri_wasm::Error> {
 /// use {gloo::console, serde::Serialize, tauri_wasm::Data};
 ///
 /// #[derive(Serialize)]
@@ -76,8 +76,8 @@ where
 ///
 #[cfg_attr(feature = "serde", doc = "```")]
 #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn e() -> Result<(), tauri_wasm::invoke::Error> {
-/// use {gloo::console, tauri_wasm::invoke::Options};
+/// # async fn e() -> Result<(), tauri_wasm::Error> {
+/// use {gloo::console, tauri_wasm::Options};
 ///
 /// let opts = Options::from_record([("secret", "37")])?;
 /// let message = tauri_wasm::invoke_with_options("send", &[], opts).await?;
@@ -113,8 +113,8 @@ impl ToStringValue for JsString {
     }
 }
 
-impl<'rf> ToStringValue for &'rf JsString {
-    type Js = &'rf JsValue;
+impl<'str> ToStringValue for &'str JsString {
+    type Js = &'str JsValue;
 
     #[inline]
     fn to_string_value(self) -> Self::Js {
@@ -163,8 +163,8 @@ impl ToArgs for ArrayBuffer {
     }
 }
 
-impl<'rf> ToArgs for &'rf ArrayBuffer {
-    type JsValue = &'rf JsValue;
+impl<'arr> ToArgs for &'arr ArrayBuffer {
+    type JsValue = &'arr JsValue;
 
     #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {
@@ -181,8 +181,8 @@ impl ToArgs for Uint8Array {
     }
 }
 
-impl<'rf> ToArgs for &'rf Uint8Array {
-    type JsValue = &'rf JsValue;
+impl<'arr> ToArgs for &'arr Uint8Array {
+    type JsValue = &'arr JsValue;
 
     #[inline]
     fn to_args(self) -> Result<Self::JsValue, JsValue> {

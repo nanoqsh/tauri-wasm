@@ -1,3 +1,4 @@
+#![doc = include_str!("../../README.md")]
 #![warn(clippy::missing_inline_in_public_items)]
 
 mod core;
@@ -9,17 +10,16 @@ mod headers;
 #[cfg(feature = "serde")]
 mod serde;
 
-pub mod invoke {
-    pub use crate::core::{Error, Options, ToArgs, ToHeaders, ToStringValue};
-}
-
 pub use crate::{
-    core::{invoke, invoke_with_args, invoke_with_options},
+    core::{
+        Error, Options, ToArgs, ToHeaders, ToStringValue, invoke, invoke_with_args,
+        invoke_with_options,
+    },
     ext::is_tauri,
 };
 
 #[cfg(feature = "serde")]
 pub use crate::{
-    event::{EventKind, EventTarget, emit, emit_to},
+    event::{EventTarget, emit, emit_to},
     serde::Data,
 };
