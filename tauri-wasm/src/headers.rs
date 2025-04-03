@@ -1,4 +1,4 @@
-use {crate::core::ToHeaders, wasm_bindgen::JsValue, web_sys::Headers};
+use {crate::invoke::ToHeaders, wasm_bindgen::JsValue, web_sys::Headers};
 
 impl ToHeaders for Headers {
     #[inline]

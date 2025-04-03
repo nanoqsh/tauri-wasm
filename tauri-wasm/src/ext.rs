@@ -1,4 +1,4 @@
-use {crate::core::Options, wasm_bindgen::prelude::*};
+use {crate::invoke::Options, js_sys::Promise, wasm_bindgen::prelude::*};
 
 #[wasm_bindgen(module = "/core.js")]
 extern "C" {
@@ -24,12 +24,8 @@ extern "C" {
 
 #[wasm_bindgen]
 extern "C" {
-    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"], catch)]
-    pub(crate) async fn invoke(
-        cmd: &JsValue,
-        args: &JsValue,
-        opts: Option<Options>,
-    ) -> Result<JsValue, JsValue>;
+    #[wasm_bindgen(js_namespace = ["window", "__TAURI__", "core"])]
+    pub(crate) fn invoke(cmd: &JsValue, args: &JsValue, opts: Options) -> Promise;
 
     #[wasm_bindgen(js_name = String)]
     pub(crate) fn to_string(value: &JsValue) -> String;

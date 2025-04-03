@@ -1,37 +1,28 @@
 use {
-    crate::core::{Error, Options, ToArgs},
+    crate::invoke::{Error, Options, ToArgs},
     serde::{Serialize, Serializer as _, ser::SerializeStruct},
     serde_wasm_bindgen::Serializer,
     wasm_bindgen::JsValue,
 };
 
-/// Arbitrary serializable data for [`invoke`](crate::invoke()) function family.
-pub struct Data<T>(pub T)
-where
-    T: ?Sized;
-
-impl<T> ToArgs for Data<T>
-where
-    T: Serialize,
-{
-    type JsValue = JsValue;
-
-    #[inline]
-    fn to_args(self) -> Result<Self::JsValue, JsValue> {
-        (&self).to_args()
-    }
-}
-
-impl<T> ToArgs for &Data<T>
+/// Arbitrary serializable data for [`with_args`](crate::invoke::Invoke::with_args) function.
+#[inline]
+pub fn args<T>(args: &T) -> Result<impl ToArgs, Error>
 where
     T: Serialize + ?Sized,
 {
-    type JsValue = JsValue;
+    struct Data(JsValue);
 
-    #[inline]
-    fn to_args(self) -> Result<Self::JsValue, JsValue> {
-        serde_wasm_bindgen::to_value(&self.0).map_err(JsValue::from)
+    impl ToArgs for Data {
+        type JsValue = JsValue;
+
+        fn to_args(self) -> Self::JsValue {
+            self.0
+        }
     }
+
+    let data = serde_wasm_bindgen::to_value(args).map_err(|e| Error(JsValue::from(e)))?;
+    Ok(Data(data))
 }
 
 impl Options {
@@ -41,7 +32,7 @@ impl Options {
         I: IntoIterator<IntoIter: ExactSizeIterator, Item = (&'static str, &'val str)>,
     {
         let fields = fields.into_iter();
-        let error = |e| Error::Headers(JsValue::from(e));
+        let error = |e| Error(JsValue::from(e));
 
         let ser = Serializer::new();
         let mut s = ser

@@ -1,7 +1,7 @@
 use {gloo::console, serde::Serialize, wasm_bindgen::prelude::*};
 
 async fn hello() -> Result<(), JsError> {
-    use {serde::Serialize, tauri_wasm::Data};
+    use serde::Serialize;
 
     #[derive(Serialize)]
     struct Send {
@@ -10,7 +10,8 @@ async fn hello() -> Result<(), JsError> {
 
     let s = Send { message: "ping" };
 
-    let message = tauri_wasm::invoke_with_args("hello", Data(s)).await?;
+    let args = tauri_wasm::args(&s)?;
+    let message = tauri_wasm::invoke("hello").with_args(args).await?;
     console::log!("message from backend received", &message);
 
     if message == "ping" {
@@ -29,7 +30,7 @@ async fn headers() -> Result<(), JsError> {
         ("app-2", "lo"), //
     ])?;
 
-    let message = tauri_wasm::invoke_with_options("headers", &[], opts).await?;
+    let message = tauri_wasm::invoke("headers").with_options(opts).await?;
     console::log!("message from backend received", &message);
 
     if message == "fi.hi.lo" {

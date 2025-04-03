@@ -1,11 +1,12 @@
 use {
     crate::{
-        core::{Error, ToStringValue},
         ext,
+        invoke::{Error, Options, ToStringValue},
     },
     js_sys::JsString,
     serde::Serialize,
     wasm_bindgen::prelude::*,
+    wasm_bindgen_futures::JsFuture,
 };
 
 #[rustfmt::skip]
@@ -67,10 +68,13 @@ where
 {
     let event = event.to_string_value();
 
-    let payload =
-        serde_wasm_bindgen::to_value(&payload).map_err(|e| Error::Args(JsValue::from(e)))?;
+    let payload = serde_wasm_bindgen::to_value(&payload).map_err(|e| Error(JsValue::from(e)))?;
 
-    invoke_emit(None, event.as_ref(), &payload).await
+    invoke_emit(None, event.as_ref(), &payload)
+        .await
+        .map_err(Error)?;
+
+    Ok(())
 }
 
 /// Sends an [event] to a listener registered by a specific target.
@@ -102,18 +106,21 @@ where
     let target = target.as_ref().map(|s| s.as_ref());
     let event = event.to_string_value();
 
-    let payload =
-        serde_wasm_bindgen::to_value(&payload).map_err(|e| Error::Args(JsValue::from(e)))?;
+    let payload = serde_wasm_bindgen::to_value(&payload).map_err(|e| Error(JsValue::from(e)))?;
 
-    invoke_emit(Some(target), event.as_ref(), &payload).await
+    invoke_emit(Some(target), event.as_ref(), &payload)
+        .await
+        .map_err(Error)?;
+
+    Ok(())
 }
 
 #[inline]
-async fn invoke_emit(
+fn invoke_emit(
     target: Option<EventTarget<&JsValue>>,
     event: &JsValue,
     payload: &JsValue,
-) -> Result<(), Error> {
+) -> JsFuture {
     let cmd = if target.is_none() { &EMIT } else { &EMIT_TO };
 
     let (kind, label) = match target {
@@ -130,12 +137,7 @@ async fn invoke_emit(
 
     let cmd = cmd.with(|s| JsValue::from(s));
     let args = ext::eargs(event, payload, kind, label);
-
-    ext::invoke(&cmd, &args, None)
-        .await
-        .map_err(Error::Invoke)?;
-
-    Ok(())
+    JsFuture::from(ext::invoke(&cmd, &args, Options::empty()))
 }
 
 /// An argument of event target for the [`emit_to`] function.
