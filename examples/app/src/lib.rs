@@ -22,7 +22,7 @@ async fn hello() -> Result<(), JsError> {
 }
 
 async fn headers() -> Result<(), JsError> {
-    use tauri_wasm::Options;
+    use tauri_wasm::invoke::Options;
 
     let opts = Options::from_record([
         ("app-0", "fi"), //

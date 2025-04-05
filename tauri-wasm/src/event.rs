@@ -1,7 +1,8 @@
 use {
     crate::{
+        error::Error,
         ext,
-        invoke::{Error, Options, ToStringValue},
+        invoke::{Options, ToStringValue},
     },
     js_sys::JsString,
     serde::Serialize,

@@ -2,7 +2,7 @@ use {crate::invoke::Options, js_sys::Promise, wasm_bindgen::prelude::*};
 
 #[wasm_bindgen(module = "/core.js")]
 extern "C" {
-    /// Checks whether Tauri environment is detected.
+    /// Checks whether tauri environment is detected.
     ///
     /// # Example
     ///

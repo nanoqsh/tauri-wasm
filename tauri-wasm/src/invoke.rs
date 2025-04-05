@@ -1,8 +1,7 @@
 use {
-    crate::ext,
+    crate::{error::Error, ext},
     js_sys::{ArrayBuffer, JsString, Uint8Array},
     std::{
-        error, fmt,
         pin::Pin,
         task::{Context, Poll},
     },
@@ -10,28 +9,39 @@ use {
     wasm_bindgen_futures::JsFuture,
 };
 
-/// Sends a message to the backend.
-///
-/// # Example
-///
-/// ```
-/// # async fn e() -> Result<(), tauri_wasm::Error> {
-/// use gloo::console;
-///
-/// let message = tauri_wasm::invoke("connect").await?;
-/// console::log!("connected to backend", message);
-/// # Ok(())
-/// # }
-/// ```
-#[inline]
-pub fn invoke<C>(cmd: C) -> Invoke<C::Js>
-where
-    C: ToStringValue,
-{
-    let cmd = cmd.to_string_value();
-    let args = JsValue::UNDEFINED;
-    let opts = Options::empty();
-    Invoke { cmd, args, opts }
+pub(crate) mod api {
+    use super::*;
+
+    /// Invokes a [command] on the backend.
+    ///
+    /// /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
+    ///
+    /// This function returns a future-like object that
+    /// can be extended with additional properties.
+    /// See [`with_args`](Invoke::with_args) and
+    /// [`with_options`](Invoke::with_options) for details.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # async fn e() -> Result<(), tauri_wasm::Error> {
+    /// use gloo::console;
+    ///
+    /// let message = tauri_wasm::invoke("connect").await?;
+    /// console::log!("connected to backend", message);
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[inline]
+    pub fn invoke<C>(cmd: C) -> Invoke<C::Js>
+    where
+        C: ToStringValue,
+    {
+        let cmd = cmd.to_string_value();
+        let args = JsValue::UNDEFINED;
+        let opts = Options::empty();
+        Invoke { cmd, args, opts }
+    }
 }
 
 pub struct Invoke<C, A = JsValue> {
@@ -40,8 +50,13 @@ pub struct Invoke<C, A = JsValue> {
     opts: Options,
 }
 
-impl<C> Invoke<C> {
-    /// Sends a message with arguments to the backend.
+impl<C, A> Invoke<C, A> {
+    /// Invokes a [command] with arguments on the backend.
+    ///
+    /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
+    ///
+    /// To send a custom serializable type as arguments,
+    /// use the helper [`args`](crate::args) function.
     ///
     /// # Example
     ///
@@ -68,26 +83,26 @@ impl<C> Invoke<C> {
     /// # }
     /// ```
     #[inline]
-    pub fn with_args<A>(self, args: A) -> Invoke<C, A::JsValue>
+    pub fn with_args<T>(self, args: T) -> Invoke<C, T::JsValue>
     where
-        A: ToArgs,
+        T: ToArgs,
     {
         let cmd = self.cmd;
         let args = args.to_args();
         let opts = self.opts;
         Invoke { cmd, args, opts }
     }
-}
 
-impl<C, A> Invoke<C, A> {
-    /// Sends a message with options to the backend.
+    /// Invokes a [command] with options on the backend.
+    ///
+    /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
     ///
     /// # Example
     ///
     #[cfg_attr(feature = "serde", doc = "```")]
     #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
     /// # async fn e() -> Result<(), tauri_wasm::Error> {
-    /// use {gloo::console, tauri_wasm::Options};
+    /// use {gloo::console, tauri_wasm::invoke::Options};
     ///
     /// let opts = Options::from_record([
     ///     ("secret", "2"),
@@ -279,24 +294,5 @@ pub trait ToHeaders {
     {
         let headers = self.to_headers().map_err(Error)?;
         Ok(Options { headers })
-    }
-}
-
-#[derive(Debug)]
-pub struct Error(pub(crate) JsValue);
-
-impl fmt::Display for Error {
-    #[inline]
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        ext::to_string(&self.0).fmt(f)
-    }
-}
-
-impl error::Error for Error {}
-
-impl From<Error> for JsValue {
-    #[inline]
-    fn from(e: Error) -> Self {
-        e.0
     }
 }
