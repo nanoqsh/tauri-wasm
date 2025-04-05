@@ -14,8 +14,9 @@ pub mod invoke;
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 mod serde;
+mod string;
 
-pub use crate::{error::Error, ext::is_tauri, invoke::api::invoke};
+pub use crate::{error::Error, ext::is_tauri, invoke::api::invoke, string::ToStringValue};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]

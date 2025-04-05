@@ -1,9 +1,5 @@
 use {
-    crate::{
-        error::Error,
-        ext,
-        invoke::{Options, ToStringValue},
-    },
+    crate::{error::Error, ext, invoke::Options, string::ToStringValue},
     js_sys::{JsString, Promise},
     serde::Serialize,
     std::{

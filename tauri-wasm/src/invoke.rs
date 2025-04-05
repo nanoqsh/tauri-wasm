@@ -1,6 +1,6 @@
 use {
-    crate::{error::Error, ext},
-    js_sys::{ArrayBuffer, JsString, Uint8Array},
+    crate::{error::Error, ext, string::ToStringValue},
+    js_sys::{ArrayBuffer, Uint8Array},
     std::{
         pin::Pin,
         task::{Context, Poll},
@@ -151,56 +151,6 @@ where
     fn into_future(self) -> Self::IntoFuture {
         let promise = ext::invoke(self.cmd.as_ref(), self.args.as_ref(), self.opts);
         InvokeFuture(JsFuture::from(promise))
-    }
-}
-
-pub trait ToStringValue {
-    type Js: AsRef<JsValue>;
-    fn to_string_value(self) -> Self::Js;
-}
-
-impl ToStringValue for JsString {
-    type Js = JsValue;
-
-    #[inline]
-    fn to_string_value(self) -> Self::Js {
-        JsValue::from(self)
-    }
-}
-
-impl<'str> ToStringValue for &'str JsString {
-    type Js = &'str JsValue;
-
-    #[inline]
-    fn to_string_value(self) -> Self::Js {
-        self
-    }
-}
-
-impl ToStringValue for String {
-    type Js = JsValue;
-
-    #[inline]
-    fn to_string_value(self) -> Self::Js {
-        (&self).to_string_value()
-    }
-}
-
-impl ToStringValue for &String {
-    type Js = JsValue;
-
-    #[inline]
-    fn to_string_value(self) -> Self::Js {
-        JsValue::from(self)
-    }
-}
-
-impl ToStringValue for &str {
-    type Js = JsValue;
-
-    #[inline]
-    fn to_string_value(self) -> Self::Js {
-        JsValue::from(self)
     }
 }
 
