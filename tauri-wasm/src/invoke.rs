@@ -14,7 +14,7 @@ pub(crate) mod api {
 
     /// Invokes a [command] on the backend.
     ///
-    /// /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
+    /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
     ///
     /// This function returns a future-like object that
     /// can be extended with additional properties.

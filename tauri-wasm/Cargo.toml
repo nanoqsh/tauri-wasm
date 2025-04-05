@@ -2,7 +2,7 @@
 name = "tauri-wasm"
 description = "The tauri framework library for pure rust frontend"
 documentation = "https://docs.rs/tauri-wasm"
-readme = "../README.md"
+readme = "README.md"
 keywords = ["async", "api", "wasm", "tauri"]
 categories = ["api-bindings", "asynchronous", "wasm"]
 version.workspace = true

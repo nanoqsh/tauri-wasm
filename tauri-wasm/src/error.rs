@@ -4,6 +4,7 @@ use {
     wasm_bindgen::JsValue,
 };
 
+/// Common error type.
 #[derive(Debug)]
 pub struct Error(pub(crate) JsValue);
 
