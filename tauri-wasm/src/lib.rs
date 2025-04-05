@@ -5,7 +5,7 @@
 mod error;
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-mod event;
+pub mod event;
 mod ext;
 #[cfg(feature = "headers")]
 #[cfg_attr(docsrs, doc(cfg(feature = "headers")))]
@@ -19,7 +19,4 @@ pub use crate::{error::Error, ext::is_tauri, invoke::api::invoke};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-pub use crate::{
-    event::{EventTarget, emit, emit_to},
-    serde::args,
-};
+pub use crate::{event::api::emit, serde::args};

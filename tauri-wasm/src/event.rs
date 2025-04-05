@@ -4,8 +4,12 @@ use {
         ext,
         invoke::{Options, ToStringValue},
     },
-    js_sys::JsString,
+    js_sys::{JsString, Promise},
     serde::Serialize,
+    std::{
+        pin::Pin,
+        task::{Context, Poll},
+    },
     wasm_bindgen::prelude::*,
     wasm_bindgen_futures::JsFuture,
 };
@@ -20,108 +24,151 @@ extern "C" {
     static EMIT_TO: JsString = "plugin:event|emit_to";
 }
 
-/// Sends an [event] to the backend.
-///
-/// [event]: https://v2.tauri.app/develop/calling-rust/#event-system
-///
-/// # Example
-///
-/// Send an event with string payload.
-///
-#[cfg_attr(feature = "serde", doc = "```")]
-#[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn e() -> Result<(), tauri_wasm::Error> {
-/// tauri_wasm::emit("file-selected", "/path/to/file").await?;
-/// # Ok(())
-/// # }
-/// ```
-///
-/// You can send any [serializable](Serialize) payload.
-///
-#[cfg_attr(feature = "serde", doc = "```")]
-#[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn e() -> Result<(), tauri_wasm::Error> {
-/// use serde::Serialize;
-///
-/// #[derive(Serialize)]
-/// struct Message {
-///     key: &'static str,
-///     data: u32,
-/// }
-///
-/// let message = Message {
-///     key: "secret",
-///     data: 37,
-/// };
-///
-/// tauri_wasm::emit("file-selected", &message).await?;
-/// # Ok(())
-/// # }
-/// ```
-///
-/// To trigger an event to a listener registered by a specific target
-/// you can use the [`emit_to`] function.
-#[inline]
-pub async fn emit<E, P>(event: E, payload: &P) -> Result<(), Error>
-where
-    E: ToStringValue,
-    P: Serialize + ?Sized,
-{
-    let event = event.to_string_value();
+pub(crate) mod api {
+    use super::*;
 
-    let payload = serde_wasm_bindgen::to_value(&payload).map_err(|e| Error(JsValue::from(e)))?;
+    /// Sends an [event] to the backend.
+    ///
+    /// [event]: https://v2.tauri.app/develop/calling-rust/#event-system
+    ///
+    /// # Example
+    ///
+    /// Send an event with string payload.
+    ///
+    #[cfg_attr(feature = "serde", doc = "```")]
+    #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
+    /// # async fn e() -> Result<(), tauri_wasm::Error> {
+    /// tauri_wasm::emit("file-selected", "/path/to/file")?.await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// You can send any [serializable](Serialize) payload.
+    ///
+    #[cfg_attr(feature = "serde", doc = "```")]
+    #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
+    /// # async fn e() -> Result<(), tauri_wasm::Error> {
+    /// use serde::Serialize;
+    ///
+    /// #[derive(Serialize)]
+    /// struct Message {
+    ///     key: &'static str,
+    ///     data: u32,
+    /// }
+    ///
+    /// let message = Message {
+    ///     key: "secret",
+    ///     data: 37,
+    /// };
+    ///
+    /// tauri_wasm::emit("file-selected", &message)?.await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    ///
+    /// To trigger an event to a listener registered by a specific target
+    /// you can use the [`to`](Emit::to) function.
+    #[inline]
+    pub fn emit<E, P>(event: E, payload: &P) -> Result<Emit<E::Js>, Error>
+    where
+        E: ToStringValue,
+        P: Serialize + ?Sized,
+    {
+        let event = event.to_string_value();
+        let payload =
+            serde_wasm_bindgen::to_value(&payload).map_err(|e| Error(JsValue::from(e)))?;
+        let target = None;
 
-    invoke_emit(None, event.as_ref(), &payload)
-        .await
-        .map_err(Error)?;
-
-    Ok(())
+        Ok(Emit {
+            event,
+            payload,
+            target,
+        })
+    }
 }
 
-/// Sends an [event] to a listener registered by a specific target.
-///
-/// [event]: https://v2.tauri.app/develop/calling-rust/#event-system
-///
-/// # Example
-///
-/// Send an event with string payload to the target with "editor" label.
-///
-#[cfg_attr(feature = "serde", doc = "```")]
-#[cfg_attr(not(feature = "serde"), doc = "```ignore")]
-/// # async fn e() -> Result<(), tauri_wasm::Error> {
-/// use tauri_wasm::EventTarget;
-///
-/// let target = EventTarget::from("editor");
-/// tauri_wasm::emit_to(target, "file-selected", "/path/to/file").await?;
-/// # Ok(())
-/// # }
-/// ```
-#[inline]
-pub async fn emit_to<S, E, P>(target: EventTarget<S>, event: E, payload: &P) -> Result<(), Error>
-where
-    S: ToStringValue,
-    E: ToStringValue,
-    P: Serialize + ?Sized,
-{
-    let target = target.map(|s| s.to_string_value());
-    let target = target.as_ref().map(|s| s.as_ref());
-    let event = event.to_string_value();
-
-    let payload = serde_wasm_bindgen::to_value(&payload).map_err(|e| Error(JsValue::from(e)))?;
-
-    invoke_emit(Some(target), event.as_ref(), &payload)
-        .await
-        .map_err(Error)?;
-
-    Ok(())
+pub struct Emit<E, T = JsValue> {
+    event: E,
+    payload: JsValue,
+    target: Option<EventTarget<T>>,
 }
 
-#[inline]
+impl<E> Emit<E> {
+    /// Sends an [event] to a listener registered by a specific target.
+    ///
+    /// [event]: https://v2.tauri.app/develop/calling-rust/#event-system
+    ///
+    /// # Example
+    ///
+    /// Send an event with string payload to the target with "editor" label.
+    ///
+    #[cfg_attr(feature = "serde", doc = "```")]
+    #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
+    /// # async fn e() -> Result<(), tauri_wasm::Error> {
+    /// use tauri_wasm::event::EventTarget;
+    ///
+    /// let target = EventTarget::from("editor");
+    /// tauri_wasm::emit("file-selected", "/path/to/file")?.to(target).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[inline]
+    pub fn to<S>(self, target: EventTarget<S>) -> Emit<E, S::Js>
+    where
+        S: ToStringValue,
+    {
+        let event = self.event;
+        let payload = self.payload;
+        let target = Some(target.map(|s| s.to_string_value()));
+
+        Emit {
+            event,
+            payload,
+            target,
+        }
+    }
+}
+
+pub struct EmitFuture(JsFuture);
+
+impl EmitFuture {
+    #[inline]
+    pub fn into_future(self) -> JsFuture {
+        self.0
+    }
+}
+
+impl Future for EmitFuture {
+    type Output = Result<JsValue, Error>;
+
+    #[inline]
+    fn poll(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        let me = self.get_mut();
+        Pin::new(&mut me.0).poll(cx).map_err(Error)
+    }
+}
+
+impl<E, T> IntoFuture for Emit<E, T>
+where
+    E: AsRef<JsValue>,
+    T: AsRef<JsValue>,
+{
+    type Output = Result<JsValue, Error>;
+    type IntoFuture = EmitFuture;
+
+    #[inline]
+    fn into_future(self) -> Self::IntoFuture {
+        let target = self.target.as_ref().map(|s| s.as_ref().map(|s| s.as_ref()));
+        let promise = invoke_emit(target, self.event.as_ref(), &self.payload);
+        EmitFuture(JsFuture::from(promise))
+    }
+}
+
 fn invoke_emit(
     target: Option<EventTarget<&JsValue>>,
     event: &JsValue,
     payload: &JsValue,
-) -> JsFuture {
+) -> Promise {
     let cmd = if target.is_none() { &EMIT } else { &EMIT_TO };
 
     let (kind, label) = match target {
@@ -138,10 +185,10 @@ fn invoke_emit(
 
     let cmd = cmd.with(|s| JsValue::from(s));
     let args = ext::eargs(event, payload, kind, label);
-    JsFuture::from(ext::invoke(&cmd, &args, Options::empty()))
+    ext::invoke(&cmd, &args, Options::empty())
 }
 
-/// An argument of event target for the [`emit_to`] function.
+/// An argument of event target for the [`to`](Emit::to) function.
 pub enum EventTarget<S> {
     Any,
     AnyLabel(S),

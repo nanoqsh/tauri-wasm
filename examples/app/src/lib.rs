@@ -41,10 +41,13 @@ async fn headers() -> Result<(), JsError> {
 }
 
 async fn event() -> Result<(), JsError> {
-    use tauri_wasm::EventTarget;
+    use tauri_wasm::event::EventTarget;
 
     let target = EventTarget::from("app");
-    tauri_wasm::emit_to(target, "test-event", "payload").await?;
+    tauri_wasm::emit("test-event", "payload")?
+        .to(target)
+        .await?;
+
     Ok(())
 }
 
