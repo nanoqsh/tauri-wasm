@@ -1,3 +1,7 @@
+//! Types of tauri [event system].
+//!
+//! [event system]: https://v2.tauri.app/develop/calling-rust/#event-system
+
 use {
     crate::{error::Error, ext, invoke::Options, string::ToStringValue},
     js_sys::{JsString, Promise},
@@ -83,6 +87,7 @@ pub(crate) mod api {
     }
 }
 
+/// A type used to configure an [emit](api::emit) operation.
 pub struct Emit<E, T = JsValue> {
     event: E,
     payload: JsValue,
@@ -125,9 +130,11 @@ impl<E> Emit<E> {
     }
 }
 
+/// Represents the future of an [emit](api::emit) operation.
 pub struct EmitFuture(JsFuture);
 
 impl EmitFuture {
+    /// Returns the inner future.
     #[inline]
     pub fn into_future(self) -> JsFuture {
         self.0

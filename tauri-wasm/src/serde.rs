@@ -11,6 +11,27 @@ use {
 
 /// Arbitrary serializable data for
 /// [`with_args`](crate::invoke::Invoke::with_args) function.
+///
+/// Returns an [error](Error) if serialization fails.
+///
+/// # Example
+///
+#[cfg_attr(feature = "serde", doc = "```")]
+#[cfg_attr(not(feature = "serde"), doc = "```ignore")]
+/// # async fn e() -> Result<(), tauri_wasm::Error> {
+/// use {gloo::console, std::collections::HashMap};
+///
+/// let data = HashMap::from([
+///     ("token", 4),
+///     ("secret", 7),
+/// ]);
+///
+/// let args = tauri_wasm::args(&data)?;
+/// let message = tauri_wasm::invoke("pass").with_args(args).await?;
+/// console::log!("passed to backend", message);
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn args<T>(args: &T) -> Result<impl ToArgs, Error>
 where
@@ -19,9 +40,9 @@ where
     struct Data(JsValue);
 
     impl ToArgs for Data {
-        type JsValue = JsValue;
+        type Js = JsValue;
 
-        fn to_args(self) -> Self::JsValue {
+        fn to_args(self) -> Self::Js {
             self.0
         }
     }

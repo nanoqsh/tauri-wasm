@@ -1,8 +1,12 @@
-use {crate::invoke::ToHeaders, wasm_bindgen::JsValue, web_sys::Headers};
+use {
+    crate::{Error, invoke::IntoHeaders},
+    wasm_bindgen::JsValue,
+    web_sys::Headers,
+};
 
-impl ToHeaders for Headers {
+impl IntoHeaders for Headers {
     #[inline]
-    fn to_headers(self) -> Result<JsValue, JsValue> {
+    fn into_headers(self) -> Result<JsValue, Error> {
         Ok(JsValue::from(self))
     }
 }

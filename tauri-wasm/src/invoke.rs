@@ -1,3 +1,7 @@
+//! Types of tauri [commands].
+//!
+//! [commands]: https://v2.tauri.app/develop/calling-rust/#commands
+
 use {
     crate::{error::Error, ext, string::ToStringValue},
     js_sys::{ArrayBuffer, Uint8Array},
@@ -44,6 +48,7 @@ pub(crate) mod api {
     }
 }
 
+/// A type used to configure an [invoke](api::invoke) operation.
 pub struct Invoke<C, A = JsValue> {
     cmd: C,
     args: A,
@@ -55,10 +60,10 @@ impl<C, A> Invoke<C, A> {
     ///
     /// [command]: https://v2.tauri.app/develop/calling-rust/#commands
     ///
+    /// # Passing a serializable type
+    ///
     /// To send a custom serializable type as arguments,
     /// use the helper [`args`](crate::args) function.
-    ///
-    /// # Example
     ///
     #[cfg_attr(feature = "serde", doc = "```")]
     #[cfg_attr(not(feature = "serde"), doc = "```ignore")]
@@ -82,8 +87,49 @@ impl<C, A> Invoke<C, A> {
     /// # Ok(())
     /// # }
     /// ```
+    ///
+    /// # Passing a JS object
+    ///
+    /// Thanks to the `wasm_bindgen` attribute
+    /// you can convert your type into a JS value.
+    /// To pass the value as arguments implement the [`ToArgs`] trait.
+    ///
+    /// ```
+    /// # async fn e() -> Result<(), tauri_wasm::Error> {
+    /// use {
+    ///     gloo::console,
+    ///     tauri_wasm::invoke::ToArgs,
+    ///     wasm_bindgen::prelude::*,
+    /// };
+    ///
+    /// #[wasm_bindgen(getter_with_clone)]
+    /// struct User {
+    ///     name: String,
+    ///     pass: String,
+    /// }
+    ///
+    /// impl ToArgs for User {
+    ///     type Js = JsValue;
+    ///
+    ///     fn to_args(self) -> Self::Js {
+    ///         // wasm_bindgen attribute implements
+    ///         // convertion into JS value
+    ///         JsValue::from(self)
+    ///     }
+    /// }
+    ///
+    /// let user = User {
+    ///     name: "anon".to_owned(),
+    ///     pass: "p@$$w0rD".to_owned(),
+    /// };
+    ///
+    /// let message = tauri_wasm::invoke("login").with_args(user).await?;
+    /// console::log!("logged on backend", message);
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
-    pub fn with_args<T>(self, args: T) -> Invoke<C, T::JsValue>
+    pub fn with_args<T>(self, args: T) -> Invoke<C, T::Js>
     where
         T: ToArgs,
     {
@@ -120,9 +166,11 @@ impl<C, A> Invoke<C, A> {
     }
 }
 
+/// Represents the future of an [invoke](api::invoke) operation.
 pub struct InvokeFuture(JsFuture);
 
 impl InvokeFuture {
+    /// Returns the inner future.
     #[inline]
     pub fn into_future(self) -> JsFuture {
         self.0
@@ -154,65 +202,73 @@ where
     }
 }
 
+/// Types that can be represented as arguments.
 pub trait ToArgs {
-    type JsValue: AsRef<JsValue>;
-    fn to_args(self) -> Self::JsValue;
+    type Js: AsRef<JsValue>;
+    fn to_args(self) -> Self::Js;
 }
 
 impl ToArgs for ArrayBuffer {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         JsValue::from(self)
     }
 }
 
 impl<'arr> ToArgs for &'arr ArrayBuffer {
-    type JsValue = &'arr JsValue;
+    type Js = &'arr JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         self
     }
 }
 
 impl ToArgs for Uint8Array {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         JsValue::from(self)
     }
 }
 
 impl<'arr> ToArgs for &'arr Uint8Array {
-    type JsValue = &'arr JsValue;
+    type Js = &'arr JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         self
     }
 }
 
 impl ToArgs for &[u8] {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         Uint8Array::from(self).to_args()
     }
 }
 
 impl<const N: usize> ToArgs for &[u8; N] {
-    type JsValue = JsValue;
+    type Js = JsValue;
 
     #[inline]
-    fn to_args(self) -> Self::JsValue {
+    fn to_args(self) -> Self::Js {
         self.as_slice().to_args()
     }
 }
 
+/// Invoke options.
+///
+/// To pass options to an invoke call, use the
+/// [`with_options`](Invoke::with_options) method.
+///
+/// You can create options from
+/// [headers](IntoHeaders::into_options).
 #[wasm_bindgen]
 pub struct Options {
     pub(crate) headers: JsValue,
@@ -227,6 +283,7 @@ impl Options {
 
 #[wasm_bindgen]
 impl Options {
+    /// Returns options headers.
     #[inline]
     #[wasm_bindgen(getter)]
     pub fn headers(self) -> JsValue {
@@ -234,15 +291,18 @@ impl Options {
     }
 }
 
-pub trait ToHeaders {
-    fn to_headers(self) -> Result<JsValue, JsValue>;
+/// Types that can be converted into headers.
+pub trait IntoHeaders {
+    /// Converts the value into headers.
+    fn into_headers(self) -> Result<JsValue, Error>;
 
+    /// Converts the value into [options](Options).
     #[inline]
-    fn to_options(self) -> Result<Options, Error>
+    fn into_options(self) -> Result<Options, Error>
     where
         Self: Sized,
     {
-        let headers = self.to_headers().map_err(Error)?;
+        let headers = self.into_headers()?;
         Ok(Options { headers })
     }
 }
