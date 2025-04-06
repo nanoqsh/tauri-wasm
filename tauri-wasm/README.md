@@ -1,7 +1,7 @@
 <div align="center">
     <h1>tauri-wasm</h1>
     <p>
-        The <a href="https://github.com/tauri-apps/tauri">tauri</a> framework library for pure rust frontend with <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a> (without npm)
+        The <a href="https://github.com/tauri-apps/tauri">tauri</a> framework library for pure rust frontend with <a href="https://github.com/rustwasm/wasm-bindgen">wasm-bindgen</a>
     </p>
     <p>
         <a href="https://crates.io/crates/tauri-wasm"><img src="https://img.shields.io/crates/v/tauri-wasm.svg"></img></a>
