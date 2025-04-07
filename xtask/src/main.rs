@@ -19,7 +19,7 @@ fn build() -> Result<(), Error> {
     run(Command::new("cargo").args([
         "b",
         "-p",
-        "app",
+        "app-ui",
         "-r",
         "--target",
         "wasm32-unknown-unknown",

@@ -1,5 +1,5 @@
 #![warn(clippy::missing_inline_in_public_items)]
-#![cfg_attr(doc, doc = include_str!("../README.md"))]
+#![cfg_attr(all(doc, not(doctest)), doc = include_str!("../README.md"))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 mod error;

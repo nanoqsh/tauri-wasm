@@ -10,6 +10,61 @@
     </p>
 </div>
 
-<div align="center">
-    <h4>🚧 The library is currently under development 🚧</h4>
-</div>
+## About
+
+Interact with a Tauri backend using the pure Rust library.
+You don't need NPM or any other JavaScript ecosystem tools to build the frontend, use Cargo instead.
+
+This crate is designed for Tauri version 2.0 and above.
+
+## Getting Started
+
+Let's write the frontend part:
+
+```rust
+use {
+    gloo::console,
+    wasm_bindgen::prelude::*,
+};
+
+#[wasm_bindgen]
+pub async fn start() -> Result<(), JsError> {
+    // first, check if we are running in a Tauri environment
+    if !tauri_wasm::is_tauri() {
+        console::error!("tauri was not detected!");
+        return;
+    }
+
+    // invoke the "hello" command on the backend
+    let message = tauri_wasm::invoke("hello").await?;
+
+    // log the response from the backend
+    console::log!("message: ", message);
+
+    Ok(())
+}
+```
+
+When `wasm_bindgen` attribute exports our `start` function to the JS runtime, we can call it from frontend.
+
+On the backend part let's write this:
+
+```rust
+// define the "hello" command
+#[tauri::command]
+fn hello() -> String {
+    println!("frontend invoked hello");
+    "message from backend".to_owned()
+}
+
+// configure the backend
+pub fn run() {
+    tauri::Builder::default()
+        // register the "hello" command
+        .invoke_handler(tauri::generate_handler![hello])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+```
+
+For more details, see the [example](https://github.com/nanoqsh/tauri-wasm/tree/main/examples) in the repository.
