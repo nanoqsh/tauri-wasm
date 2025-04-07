@@ -26,7 +26,7 @@ fn build() -> Result<(), Error> {
     ]))?;
 
     run(Command::new("wasm-bindgen").args([
-        "../target/wasm32-unknown-unknown/release/app.wasm",
+        "../target/wasm32-unknown-unknown/release/app_ui.wasm",
         "--out-dir",
         "app-tauri/dist",
         "--target",
