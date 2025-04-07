@@ -13,7 +13,7 @@
 ## About
 
 Interact with a Tauri backend using the pure Rust library.
-You don't need NPM or any other JavaScript ecosystem tools to build the frontend, use Cargo instead.
+You don't need NPM or any other JavaScript tools to build a frontend, use Cargo instead.
 
 This crate is designed for Tauri version 2.0 and above.
 

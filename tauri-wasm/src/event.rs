@@ -68,6 +68,24 @@ pub(crate) mod api {
     ///
     /// To trigger an event to a listener registered by a specific target
     /// you can use the [`to`](Emit::to) function.
+    ///
+    /// # Capabilities
+    ///
+    /// Note that in order to emit events, the Tauri framework
+    /// requires the corresponding capabilities to be enabled.
+    /// For example, let's say our application and its window
+    /// are named "app". Then your `Tauri.toml` config should
+    /// include something like:
+    ///
+    /// ```toml
+    /// [app]
+    /// # app configs..
+    ///
+    /// [[app.security.capabilities]]
+    /// identifier = "default"
+    /// windows = ["app"]
+    /// permissions = ["core:event:default"]
+    /// ```
     #[inline]
     pub fn emit<E, P>(event: E, payload: &P) -> Result<Emit<E::Js>, Error>
     where
