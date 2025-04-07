@@ -32,7 +32,7 @@ pub async fn start() -> Result<(), JsError> {
     // first, check if we are running in a Tauri environment
     if !tauri_wasm::is_tauri() {
         console::error!("tauri was not detected!");
-        return;
+        return Ok(());
     }
 
     // invoke the "hello" command on the backend
