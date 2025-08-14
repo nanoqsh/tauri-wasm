@@ -1,21 +1,24 @@
 use std::{
-    error,
+    env, error,
+    path::PathBuf,
     process::{Command, ExitCode},
 };
 
 type Error = Box<dyn error::Error>;
 
 fn main() -> ExitCode {
-    match build() {
-        Ok(()) => ExitCode::SUCCESS,
-        Err(e) => {
-            eprintln!("error: {e}");
-            ExitCode::FAILURE
-        }
+    if let Err(e) = build() {
+        eprintln!("error: {e}");
+        ExitCode::FAILURE
+    } else {
+        ExitCode::SUCCESS
     }
 }
 
 fn build() -> Result<(), Error> {
+    let root = workspace_root().ok_or("workspace root not found")?;
+    let root = root.to_string_lossy();
+
     run(Command::new("cargo").args([
         "b",
         "-p",
@@ -25,14 +28,18 @@ fn build() -> Result<(), Error> {
         "wasm32-unknown-unknown",
     ]))?;
 
-    run(Command::new("wasm-bindgen").args([
-        "../target/wasm32-unknown-unknown/release/app_ui.wasm",
+    let mut wasm_bindgen = Command::new("wasm-bindgen");
+
+    wasm_bindgen.args([
+        &format!("{root}/target/wasm32-unknown-unknown/release/app_ui.wasm"),
         "--out-dir",
-        "app-tauri/dist",
+        &format!("{root}/examples/app-tauri/dist"),
         "--target",
         "web",
         "--no-typescript",
-    ]))?;
+    ]);
+
+    run(&mut wasm_bindgen)?;
 
     Ok(())
 }
@@ -46,7 +53,15 @@ fn run(cmd: &mut Command) -> Result<(), Error> {
 
     match cmd.status() {
         Ok(s) if s.success() => Ok(()),
-        Ok(_) => Err(Error::from(format!("execution of {name} failed"))),
-        Err(e) => Err(Error::from(format!("failed to run {name}: {e}"))),
+        Ok(_) => Err(format!("execution of {name} failed").into()),
+        Err(e) => Err(format!("failed to run {name}: {e}").into()),
     }
+}
+
+fn workspace_root() -> Option<PathBuf> {
+    env::current_dir()
+        .ok()?
+        .ancestors()
+        .find(|p| p.join("Cargo.lock").is_file())
+        .map(PathBuf::from)
 }
