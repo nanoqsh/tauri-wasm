@@ -284,6 +284,7 @@ impl Options {
 #[wasm_bindgen]
 impl Options {
     /// Returns options headers.
+    #[inline]
     #[wasm_bindgen(getter)]
     pub fn headers(self) -> JsValue {
         self.headers
